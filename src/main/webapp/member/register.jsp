@@ -9,9 +9,9 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="로그인 페이지입니다.">
+    <meta name="description" content="회원가입 페이지입니다.">
     <meta name="keywords" content="로그인, 회원가입">
-    <title>로그인</title>
+    <title>회원가입</title> 
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Raleway:300,400,600,600i,700" rel="stylesheet">
     <link href="css/font-awesome.min.css" rel="stylesheet">
@@ -52,6 +52,7 @@
             </div>
         </div>
     </div>
+    
     <div class="space-medium">
         <div class="container">
             <div class="row">
@@ -59,30 +60,53 @@
                     <div class="pinside30 outline">
                         
                         <div class="text-center mb60 section-title">
-                            <h1>로그인</h1>
-                        </div>
+                            <h1>회원가입</h1> </div>
                         
-                        <form action="login.do" method="post"> 
+                        <form method="post" action="register.do"> 
+                            
+                            <c:if test="${not empty errorMessage}">
+                                <div class="alert alert-danger" role="alert" style="font-weight: bold;">
+                                    ${errorMessage}
+                                </div>
+                            </c:if>
+
+                            <div class="form-group">
+                                <label class="control-label" for="name">이름</label>
+                                <input type="text" class="form-control" name="name" id="name" placeholder="이름을 입력하세요" required value="${inputName}">
+                            </div>
                             
                             <div class="form-group">
                                 <label class="control-label" for="id">아이디</label>
-                                <input type="text" class="form-control" name="id" id="id" placeholder="아이디를 입력하세요" required>
-                            </div>
+                                <input type="text" class="form-control" name="id" id="id" placeholder="아이디를 입력하세요" required value="${inputId}">
+                                </div>
                             
                             <div class="form-group">
                                 <label class="control-label" for="password">비밀번호</label>
-                                <input type="password" class="form-control" name="pw" id="password" placeholder="비밀번호를 입력하세요" required>
+                                <input type="password" class="form-control" name="pw" id="password" placeholder="비밀번호를 입력하세요" required> 
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label" for="confirm_password">비밀번호 확인</label>
+                                <input type="password" class="form-control" name="confirm_pw" id="confirm_password" placeholder="비밀번호를 다시 입력하세요" required> 
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="control-label" for="email">이메일</label>
+                                <input type="email" class="form-control" name="email" id="email" placeholder="이메일을 입력하세요" required value="${inputEmail}">
                             </div>
 
-                            <c:if test="${not empty error}">
-                                <p style="color: red; margin-bottom: 15px;">${error}</p>
-                            </c:if>
+                            <div class="form-group">
+                                <label class="control-label" for="phone">전화번호</label>
+                                <input type="text" class="form-control" name="phone" id="phone" placeholder="010-XXXX-XXXX" value="${inputPhone}">
+                            </div>
+
                             <div class="form-group text-center">
-                                <button type="submit" class="btn btn-default">로그인</button>
-                                <a href="${pageContext.request.contextPath}/register.jsp" class="btn btn-link">회원가입</a>
+                                <button type="submit" class="btn btn-default">가입하기</button>
+                                <a href="${pageContext.request.contextPath}/login.jsp" class="btn btn-link">취소</a>
                             </div>
                         </form>
-                        </div>
+                        
+                    </div>
                 </div>
             </div>
         </div>

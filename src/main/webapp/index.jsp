@@ -37,19 +37,19 @@
         <li class="active"><a href="${pageContext.request.contextPath}/index.jsp">Home</a></li> 
 
         <c:if test="${not isLogin}">
-            <li><a href="${pageContext.request.contextPath}/login.jsp">로그인</a></li>
-            <li><a href="${pageContext.request.contextPath}/register.jsp">회원가입</a></li>
+            <li><a href="${pageContext.request.contextPath}/member/login.jsp">로그인</a></li>
+            <li><a href="${pageContext.request.contextPath}/member/register.jsp">회원가입</a></li>
         </c:if>
 
         <c:if test="${isLogin}">
             <li><strong>${loginUser.name}님</strong></li>
-            <li><a href="${pageContext.request.contextPath}/mypage.jsp">회원정보수정</a></li>
-            <li><a href="${pageContext.request.contextPath}/logout.do">로그아웃</a></li> 
+            <li><a href="${pageContext.request.contextPath}/member/mypage.jsp">회원정보수정</a></li>
+            <li><a href="${pageContext.request.contextPath}/auth/logout.do">로그아웃</a></li> 
         </c:if>
 
-        <li><a href="${pageContext.request.contextPath}/board/list.do">자유게시판</a></li>
-        <li><a href="${pageContext.request.contextPath}/qna/list.do">Q&A 게시판</a></li>
-        <li><a href="${pageContext.request.contextPath}/file/list.do">자료실</a></li>
+        <li><a href="${pageContext.request.contextPath}/freeboard/list.do">자유게시판</a></li>
+        <li><a href="${pageContext.request.contextPath}/qnaboard/list.do">Q&A 게시판</a></li>
+        <li><a href="${pageContext.request.contextPath}/fileboard/list.do">자료실</a></li>
     </ul>
 </div>
                     </div>
