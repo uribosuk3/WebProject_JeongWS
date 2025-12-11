@@ -1,7 +1,11 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="jakarta.tags.core" %> <%-- 💡 Jakarta EE URI로 변경 --%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %> 
 
+<%-- 
+    ⭐️⭐️ 기존 쿠키 읽는 로직은 그대로 유지합니다. ⭐️⭐️
+    이 로직 덕분에 EL 변수 'savedIdValue'가 생성됩니다.
+--%>
 <%
     // 쿠키에서 'savedId'를 찾아서 JSP 변수에 저장
     String savedId = "";
@@ -49,8 +53,7 @@
                             </div>
                         </c:if>
                         
-                        <%-- 💡 2. Action URL 수정: login.do는 auth/login.do로 변경 권장 --%>
-                        <form action="${pageContext.request.contextPath}/auth/login.do" method="post"> 
+                        <form action="${pageContext.request.contextPath}/member/login.do" method="post"> 
                             
                             <div class="form-group">
                                 <label class="control-label" for="id">아이디</label>
@@ -79,7 +82,7 @@
                                 <a href="${pageContext.request.contextPath}/member/register.jsp" class="btn btn-link">회원가입</a>
                             </div>
                         </form>
-                        </div>
+                     </div>
                 </div>
             </div>
         </div>

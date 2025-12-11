@@ -13,13 +13,13 @@ import model.dao.FreeBoardDAO;
 import model.dto.FreeBoardDTO;
 import model.dto.UsersDTO;
 
-@WebServlet("/board/delete.do")
+@WebServlet("/freeboard/delete.do")
 public class FreeBoardDeleteServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private FreeBoardDAO dao = FreeBoardDAO.getInstance();
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) 
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)    
             throws ServletException, IOException {
         
         // 1. 로그인 및 권한 체크
@@ -28,7 +28,8 @@ public class FreeBoardDeleteServlet extends HttpServlet {
         String idxStr = req.getParameter("idx");
         
         if (loginUser == null || idxStr == null || idxStr.trim().isEmpty()) {
-            resp.sendRedirect(req.getContextPath() + "/board/list.do");
+            // 💡 경로 통일: /board/list.do -> /freeboard/list.do
+            resp.sendRedirect(req.getContextPath() + "/freeboard/list.do");
             return;
         }
         
@@ -45,12 +46,13 @@ public class FreeBoardDeleteServlet extends HttpServlet {
         }
         
         // 4. DB 삭제 처리
-        // 💡 DAO에서 댓글, 추천 정보도 함께 삭제하도록 트랜잭션 처리가 되어 있어야 합니다.
+        // 💡 DAO에서 댓글, 추천 정보도 함께 삭제하도록 트랜잭션 처리가 되어 있어야 합니다. (DAO에서 이미 처리했다 가정)
         boolean dbResult = dao.deleteBoard(idx); 
 
         // 5. 결과 처리
         if (dbResult) {
-            resp.sendRedirect(req.getContextPath() + "/board/list.do");
+            // 💡 경로 통일: /board/list.do -> /freeboard/list.do
+            resp.sendRedirect(req.getContextPath() + "/freeboard/list.do");
         } else {
             // DB 삭제 실패
             resp.setContentType("text/html; charset=UTF-8");

@@ -1,4 +1,4 @@
-package servlet.freeboard;
+package servlet.freeboard; 
 
 import java.io.IOException;
 
@@ -13,12 +13,12 @@ import model.dao.FreeBoardLikeDAO;
 import model.dto.FreeBoardLikeDTO;
 import model.dto.UsersDTO;
 
-@WebServlet("/board/like.do")
+@WebServlet("/freeboard/like.do")
 public class FreeBoardLikeServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) 
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)    
             throws ServletException, IOException {
         
         HttpSession session = req.getSession(false);
@@ -38,7 +38,8 @@ public class FreeBoardLikeServlet extends HttpServlet {
         try {
             board_idx = Integer.parseInt(boardIdxStr);
         } catch (NumberFormatException e) {
-            resp.sendRedirect(req.getContextPath() + "/board/list.do");
+            // 💡 경로 통일: /board/list.do -> /freeboard/list.do
+            resp.sendRedirect(req.getContextPath() + "/freeboard/list.do");
             return;
         }
 
@@ -46,7 +47,7 @@ public class FreeBoardLikeServlet extends HttpServlet {
         FreeBoardLikeDAO dao = FreeBoardLikeDAO.getInstance();
         boolean isSuccess = false;
 
-        // 3. 추천 상태 확인
+        // 3. 추천 상태 확인 및 토글
         int existingLikeIdx = dao.checkLike(board_idx, user_idx);
 
         if (existingLikeIdx > 0) {
@@ -67,6 +68,7 @@ public class FreeBoardLikeServlet extends HttpServlet {
         }
 
         // 4. 상세 페이지로 리다이렉트하여 변경된 상태 확인
-        resp.sendRedirect(req.getContextPath() + "/board/view.do?idx=" + board_idx + "&pageNum=" + pageNum);
+        // (경로 통일 이미 되어 있음: /freeboard/view.do)
+        resp.sendRedirect(req.getContextPath() + "/freeboard/view.do?idx=" + board_idx + "&pageNum=" + pageNum);
     }
 }

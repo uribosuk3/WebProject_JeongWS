@@ -20,6 +20,7 @@ public class FreeBoardDAO {
 
     /**
      * [1. 페이징 목록 조회] 검색 조건을 반영하여 지정된 범위의 게시글을 조회합니다.
+     * 💡 users 테이블을 JOIN하여 작성자 이름(writerName)을 가져옵니다.
      * @param searchField 검색 필드 (title, content, all)
      * @param searchWord 검색 키워드
      * @param start 시작 행 번호
@@ -33,24 +34,25 @@ public class FreeBoardDAO {
         if (searchWord != null && !searchWord.trim().isEmpty()) {
             // "all" 검색 필드는 title과 content를 모두 검색
             if ("all".equals(searchField)) {
-                whereClause += "WHERE title LIKE '%' || ? || '%' OR content LIKE '%' || ? || '%' ";
+                whereClause += "WHERE B.title LIKE '%' || ? || '%' OR B.content LIKE '%' || ? || '%' "; 
             } else {
-                whereClause += "WHERE " + searchField + " LIKE '%' || ? || '%' ";
+                whereClause += "WHERE B." + searchField + " LIKE '%' || ? || '%' "; 
             }
         }
         
+        // 💡 SQL 수정: users 테이블과 JOIN하여 작성자 이름(U.name)을 가져오도록 수정
         String sql = "SELECT * FROM ("
-                   + "    SELECT ROWNUM AS RNUM, T.* FROM ("
-                   + "        SELECT idx, user_idx, title, content, postdate, views, likes "
-                   + "        FROM free_board "
-                   +         whereClause 
-                   + "        ORDER BY idx DESC"
-                   + "    ) T"
-                   + ") WHERE RNUM BETWEEN ? AND ?";
+                    + "    SELECT ROWNUM AS RNUM, T.* FROM ("
+                    + "        SELECT B.idx, B.user_idx, B.title, B.content, B.postdate, B.views, B.likes, U.name AS writerName " // 작성자 이름 추가
+                    + "        FROM free_board B JOIN users U ON B.user_idx = U.idx " // JOIN 구문 추가
+                    + whereClause 
+                    + "        ORDER BY B.idx DESC"
+                    + "    ) T"
+                    + ") WHERE RNUM BETWEEN ? AND ?";
 
         try (Connection conn = DBConn.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-             
+                
             int parameterIndex = 1;
 
             // 검색어가 있을 경우 매개변수 설정
@@ -74,10 +76,13 @@ public class FreeBoardDAO {
                     dto.setIdx(rs.getInt("idx"));
                     dto.setUser_idx(rs.getInt("user_idx"));
                     dto.setTitle(rs.getString("title"));
-                    dto.setContent(rs.getString("content"));
+                    // dto.setContent(rs.getString("content")); // 목록에서는 content는 생략
                     dto.setPostdate(rs.getDate("postdate"));
                     dto.setViews(rs.getInt("views"));
                     dto.setLikes(rs.getInt("likes"));
+                    
+                    // 💡 작성자 이름 매핑
+                    dto.setWriterName(rs.getString("writerName"));
                     
                     boardList.add(dto);
                 }
@@ -92,9 +97,7 @@ public class FreeBoardDAO {
     }
 
     /**
-     * [2. 전체 게시물 수 조회] 검색 조건을 반영하여 전체 게시글 수를 조회합니다.
-     * @param searchField 검색 필드 (title, content, all)
-     * @param searchWord 검색 키워드
+     * [2. 전체 게시물 수 조회] 검색 조건을 반영하여 전체 게시글 수를 조회합니다. (수정 불필요)
      */
     public int selectCount(String searchField, String searchWord) { 
         int count = 0;
@@ -135,11 +138,11 @@ public class FreeBoardDAO {
     }
     
     /**
-     * [3. 게시글 등록] 새로운 게시글을 DB에 삽입합니다. (기존 유지)
+     * [3. 게시글 등록] 새로운 게시글을 DB에 삽입합니다. (시퀀스 이름 통일 완료)
      */
     public boolean insertBoard(FreeBoardDTO dto) {
         String sql = "INSERT INTO free_board (idx, user_idx, title, content, postdate, views, likes) "
-                   + "VALUES (seq_free_board_idx.NEXTVAL, ?, ?, ?, SYSDATE, 0, 0)";
+                    + "VALUES (seq_free_board_idx.NEXTVAL, ?, ?, ?, SYSDATE, 0, 0)";
 
         try (Connection conn = DBConn.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -159,7 +162,7 @@ public class FreeBoardDAO {
     }
 
     /**
-     * [4. 조회수 증가] 특정 게시글의 조회수를 1 증가시킵니다. (기존 유지)
+     * [4. 조회수 증가] 특정 게시글의 조회수를 1 증가시킵니다. (수정 불필요)
      */
     public boolean updateViews(int idx) {
         String sql = "UPDATE free_board SET views = views + 1 WHERE idx = ?";
@@ -179,13 +182,16 @@ public class FreeBoardDAO {
     }
 
     /**
-     * [5. 상세 게시글 조회] 특정 게시글의 모든 정보를 조회합니다. (기존 유지)
+     * [5. 상세 게시글 조회] 특정 게시글의 모든 정보를 조회합니다.
+     * 💡 users 테이블을 JOIN하여 작성자 이름(writerName)을 가져옵니다.
      * @param idx 게시글 고유 번호
      */
     public FreeBoardDTO selectBoard(int idx) {
         FreeBoardDTO dto = null;
-        String sql = "SELECT idx, user_idx, title, content, postdate, views, likes "
-                   + "FROM free_board WHERE idx = ?";
+        // 💡 SQL 수정: users 테이블과 JOIN하여 U.name(writerName)을 가져오도록 수정
+        String sql = "SELECT B.idx, B.user_idx, B.title, B.content, B.postdate, B.views, B.likes, U.name AS writerName "
+                    + "FROM free_board B LEFT JOIN users U ON B.user_idx = U.idx "
+                    + "WHERE B.idx = ?";
         
         try (Connection conn = DBConn.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -202,6 +208,9 @@ public class FreeBoardDAO {
                     dto.setPostdate(rs.getDate("postdate"));
                     dto.setViews(rs.getInt("views"));
                     dto.setLikes(rs.getInt("likes"));
+                    
+                    // 💡 작성자 이름 매핑
+                    dto.setWriterName(rs.getString("writerName"));
                 }
             }
         } 
@@ -213,8 +222,7 @@ public class FreeBoardDAO {
     }
     
     /**
-     * [6. 게시글 수정] 제목과 내용으로 게시글을 업데이트합니다. (기존 유지)
-     * @param dto 수정할 게시글 정보 (idx, title, content)
+     * [6. 게시글 수정] 제목과 내용으로 게시글을 업데이트합니다. (수정 불필요)
      */
     public boolean updateBoard(FreeBoardDTO dto) {
         String sql = "UPDATE free_board SET title = ?, content = ?, postdate = SYSDATE WHERE idx = ?";
@@ -236,8 +244,7 @@ public class FreeBoardDAO {
     }
 
     /**
-     * [7. 게시글 삭제] 특정 게시글을 DB에서 제거합니다. (기존 유지)
-     * @param idx 삭제할 게시글 고유 번호
+     * [7. 게시글 삭제] 특정 게시글을 DB에서 제거합니다. (수정 불필요)
      */
     public boolean deleteBoard(int idx) {
         String sql = "DELETE FROM free_board WHERE idx = ?";

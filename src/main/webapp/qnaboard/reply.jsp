@@ -12,7 +12,6 @@
         alert('로그인 후 이용 가능합니다.');
         location.href='${pageContext.request.contextPath}/login.jsp';
     </script>
-    <c:return/>
 </c:if>
 
 <c:set var="parent_idx" value="${param.idx}"/>

@@ -49,6 +49,9 @@ public class FileBoardDownloadServlet extends HttpServlet {
         // 3. 파일 경로 설정
         String applicationPath = req.getServletContext().getRealPath("");
         String saveDirectory = applicationPath + File.separator + UPLOAD_DIR;
+        
+        System.out.println("디버그: UPLOAD_DIR 경로 -> " + saveDirectory);
+        
         String filePath = saveDirectory + File.separator + dto.getStored_filename();
         
         File downloadFile = new File(filePath);

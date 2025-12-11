@@ -1,4 +1,4 @@
-package Servlet.auth;
+package servlet.auth;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -11,7 +11,7 @@ import java.io.IOException;
 import model.dao.UsersDAO;
 import model.dto.UsersDTO;
 
-@WebServlet("/auth/register.do") // 💡 /auth/ 경로로 통일
+@WebServlet("/member/register.do") 
 public class RegisterServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 

@@ -3,22 +3,17 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
-<%-- 💡 1. 공통 Header 포함 --%>
 <%@ include file="../common/header.jsp" %> 
-<%-- header.jsp에서 pageTitle을 사용하므로, ViewServlet에서 req.setAttribute("pageTitle", board.title + " - 게시글 상세");를 해야 합니다. --%>
 
 <c:if test="${empty board}">
     <script>
         alert('존재하지 않는 게시글입니다.');
-        location.href='${pageContext.request.contextPath}/board/list.do';
+        location.href='${pageContext.request.contextPath}/freeboard/list.do';
     </script>
-    <c:return/>
 </c:if>
 
-<%-- 💡 2. <HTML>, <HEAD>, <body> 시작 태그 및 Header 관련 DIV 제거 --%>
-
     <style>
-        /* 💡 3. CSS 파일의 경로는 header.jsp에서 처리하고, 개별 스타일만 남깁니다. */
+        /* ... 스타일 생략 ... */
         .board-view-header { border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
         .board-view-header h2 { margin-top: 0; }
         .board-info { color: #888; font-size: 0.9em; }
@@ -39,18 +34,18 @@
                         <h1>게시글 상세 보기</h1>
                     </div>
                     
-                    <div class="board-view">
-                        <div class="board-view-header">
-                            <h2>${board.title}</h2>
-                            <div class="board-info">
+                    <div class="freeboard-view">
+                        <div class="freeboard-view-header">
+                            <h2>${board.title}</h2> 
+                            <div class="freeboard-info">
                                 <span>작성자: **${board.writerName}**</span>
                                 <span>작성일: <fmt:formatDate value="${board.postdate}" pattern="yyyy.MM.dd HH:mm"/></span>
                                 <span>조회수: ${board.views}</span>
-                                <span>추천: ${board.likes}</span>
+                                <span>추천: <span id="board-likes">${board.likes}</span></span>
                             </div>
                         </div>
 
-                        <div class="board-content">
+                        <div class="freeboard-content">
                             ${board.content}
                         </div>
                     </div>
@@ -58,11 +53,14 @@
                     <div class="text-center my-4">
                         <c:choose>
                             <c:when test="${not empty sessionScope.loginUser}">
-                                <a href="${pageContext.request.contextPath}/board/like.do?idx=${board.idx}&pageNum=${pageNum}" 
-                                   class="btn btn-lg ${isLiked ? 'btn-danger' : 'btn-info'}">
+                                <button id="like-button" 
+                                        data-board-idx="${board.idx}" 
+                                        onclick="toggleRecommend(this)"
+                                        class="btn btn-lg ${isLiked ? 'btn-danger' : 'btn-info'}">
                                     <span class="glyphicon glyphicon-thumbs-up"></span> 
-                                    ${isLiked ? '추천 취소' : '추천하기'} (${board.likes})
-                                </a>
+                                    ${isLiked ? '추천 취소' : '추천하기'} 
+                                    (<span id="recommend-count">${board.likes}</span>)
+                                </button>
                             </c:when>
                             <c:otherwise>
                                 <button class="btn btn-lg btn-default disabled" title="로그인이 필요합니다">
@@ -75,11 +73,11 @@
 
                     <div class="text-right mt-4">
                         <c:if test="${not empty sessionScope.loginUser && sessionScope.loginUser.idx == board.user_idx}">
-                            <a href="${pageContext.request.contextPath}/board/edit.do?idx=${board.idx}&pageNum=${pageNum}" class="btn btn-warning">수정</a>
-                            <a href="${pageContext.request.contextPath}/board/delete.do?idx=${board.idx}&pageNum=${pageNum}" class="btn btn-danger" onclick="return confirm('정말로 삭제하시겠습니까?');">삭제</a>
+                            <a href="${pageContext.request.contextPath}/freeboard/edit.do?idx=${board.idx}&pageNum=${pageNum}" class="btn btn-warning">수정</a>
+                            <a href="${pageContext.request.contextPath}/freeboard/delete.do?idx=${board.idx}&pageNum=${pageNum}" class="btn btn-danger" onclick="return confirm('정말로 삭제하시겠습니까?');">삭제</a>
                         </c:if>
                         
-                        <a href="${pageContext.request.contextPath}/board/list.do?pageNum=${empty pageNum ? '1' : pageNum}" class="btn btn-default">목록으로</a>
+                        <a href="${pageContext.request.contextPath}/freeboard/list.do?pageNum=${empty pageNum ? '1' : pageNum}" class="btn btn-default">목록으로</a>
                     </div>
                     
                     <hr>
@@ -101,7 +99,7 @@
                                                     <fmt:formatDate value="${comment.postdate}" pattern="yyyy.MM.dd HH:mm"/>
                                                     
                                                     <c:if test="${not empty sessionScope.loginUser && sessionScope.loginUser.idx == comment.user_idx}">
-                                                        <a href="${pageContext.request.contextPath}/comment/delete.do?comment_idx=${comment.idx}&board_idx=${board.idx}&pageNum=${pageNum}" 
+                                                        <a href="${pageContext.request.contextPath}/freeboard/commentDelete.do?comment_idx=${comment.idx}&freeboard_idx=${board.idx}&pageNum=${pageNum}" 
                                                            class="btn btn-sm btn-danger ml-2" style="font-size: 0.75rem;" 
                                                            onclick="return confirm('댓글을 삭제하시겠습니까?');">삭제</a>
                                                     </c:if>
@@ -115,8 +113,8 @@
                         </div>
 
                         <c:if test="${not empty sessionScope.loginUser}">
-                            <form method="post" action="${pageContext.request.contextPath}/comment/write.do" class="mb-5">
-                                <input type="hidden" name="board_idx" value="${board.idx}">
+                            <form method="post" action="${pageContext.request.contextPath}/freeboard/commentWrite.do" class="mb-5">
+                                <input type="hidden" name="freeboard_idx" value="${board.idx}">
                                 <input type="hidden" name="pageNum" value="${pageNum}"> 
                                 
                                 <div class="form-group">
@@ -130,7 +128,7 @@
                         </c:if>
                         <c:if test="${empty sessionScope.loginUser}">
                             <div class="alert alert-info text-center">
-                                댓글을 작성하려면 <a href="${pageContext.request.contextPath}/login.jsp">로그인</a>이 필요합니다.
+                                댓글을 작성하려면 <a href="${pageContext.request.contextPath}/member/login.do">로그인</a>이 필요합니다.
                             </div>
                         </c:if>
                         
@@ -139,6 +137,74 @@
             </div>
         </div>
     </div>
+
+<script>
+    function toggleRecommend(buttonElement) {
+        // 로그인 체크 (JS에서도 한 번 더 체크)
+        if (${empty sessionScope.loginUser}) {
+            alert('로그인이 필요합니다.');
+            location.href = '${pageContext.request.contextPath}/member/login.do';
+            return;
+        }
+
+        const boardIdx = buttonElement.getAttribute('data-board-idx');
+
+        fetch('${pageContext.request.contextPath}/freeboard/recommend.do', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'idx=' + boardIdx
+        })
+        .then(response => {
+            // HTTP 상태 코드가 200번대가 아니면 에러 처리 (403, 500 등)
+            if (!response.ok) {
+                // 서버에서 보낸 오류 JSON 메시지를 읽어 에러를 throw
+                return response.json().then(errorData => {
+                    throw new Error(errorData.message || '서버 응답 오류 발생');
+                });
+            }
+            // 서버에서 직접 만든 JSON 문자열을 파싱
+            return response.json();
+        })
+        .then(data => {
+            // JSON 데이터의 'success' 필드 확인
+            if (data.success) {
+                const recommendCountElement = document.getElementById('recommend-count'); // 버튼 안의 숫자
+                const boardLikesElement = document.getElementById('board-likes');       // 헤더의 숫자
+                
+                // 1. 추천수 업데이트
+                if (recommendCountElement) {
+                    recommendCountElement.textContent = data.newCount;
+                }
+                if (boardLikesElement) {
+                    boardLikesElement.textContent = data.newCount;
+                }
+
+                // 2. 버튼 상태 및 텍스트 업데이트
+                if (data.isLiked) {
+                    buttonElement.classList.remove('btn-info');
+                    buttonElement.classList.add('btn-danger');
+                    buttonElement.innerHTML = '<span class="glyphicon glyphicon-thumbs-up"></span> 추천 취소 (' + data.newCount + ')';
+                    alert('게시글을 추천했습니다!');
+                } else {
+                    buttonElement.classList.remove('btn-danger');
+                    buttonElement.classList.add('btn-info');
+                    buttonElement.innerHTML = '<span class="glyphicon glyphicon-thumbs-up"></span> 추천하기 (' + data.newCount + ')';
+                    alert('추천을 취소했습니다.');
+                }
+
+            } else {
+                // DAO에서 처리 실패 (success: false)
+                throw new Error(data.message || '알 수 없는 DB 오류');
+            }
+        })
+        .catch(error => {
+            console.error('추천 Fetch 오류:', error);
+            // 최종 실패 메시지 출력
+            alert('추천 등록 실패: ' + error.message);
+        });
+    }
+</script>
     
-<%-- 💡 4. <script> 태그 및 </body>, </html> 닫는 태그 제거하고 공통 Footer 포함 --%>
 <%@ include file="../common/footer.jsp" %>

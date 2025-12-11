@@ -1,4 +1,4 @@
-package servlet.freeboard;
+package servlet.freeboard; 
 
 import java.io.IOException;
 import java.util.List;
@@ -10,20 +10,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import model.dao.FreeBoardDAO;
-import model.dao.UsersDAO;
+// import model.dao.UsersDAO; // 💡 UsersDAO는 더 이상 필요 없으므로 제거
 import model.dto.FreeBoardDTO;
 
-@WebServlet("/board/list.do")
+@WebServlet("/freeboard/list.do")
 public class FreeBoardListServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) 
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)    
             throws ServletException, IOException {
 
         // 1. DAO 인스턴스
         FreeBoardDAO dao = FreeBoardDAO.getInstance();
-        UsersDAO usersDao = UsersDAO.getInstance();
+        // UsersDAO usersDao = UsersDAO.getInstance(); // 💡 작성자 이름 조회 로직 제거로 인해 필요 없음
 
         // 💡💡 2. 검색 파라미터 추출 및 설정 💡💡
         String searchField = req.getParameter("searchField");
@@ -35,10 +35,10 @@ public class FreeBoardListServlet extends HttpServlet {
         }
         // 검색어는 공백 제거 후 null이거나 비어있으면 null로 처리
         if (searchWord != null) {
-             searchWord = searchWord.trim();
-             if (searchWord.isEmpty()) {
-                 searchWord = null;
-             }
+              searchWord = searchWord.trim();
+              if (searchWord.isEmpty()) {
+                  searchWord = null;
+              }
         }
 
         // --- [페이징 기본 설정] ---
@@ -58,6 +58,7 @@ public class FreeBoardListServlet extends HttpServlet {
         
         // 4. 전체 게시물 수 조회 (검색 조건 전달)
         int totalCount = dao.selectCount(searchField, searchWord); 
+        System.out.println("DEBUG: Total Count = " + totalCount); // 💡 이 줄을 추가하여 콘솔 확인
         
         // 5. 총 페이지 수 계산
         int totalPage = (int) Math.ceil((double) totalCount / pageSize);
@@ -67,13 +68,16 @@ public class FreeBoardListServlet extends HttpServlet {
         int end = pageNum * pageSize;
         
         // 7. DB에서 현재 페이지의 게시물 목록 조회 (검색 조건 전달)
+        // 💡 DAO에서 이미 작성자 이름(writerName)을 DTO에 매핑하여 가져옵니다.
         List<FreeBoardDTO> boardList = dao.selectList(searchField, searchWord, start, end); 
 
-        // 8. 작성자 이름 조회 및 DTO에 설정
-        for (FreeBoardDTO dto : boardList) {
-            String writerName = usersDao.selectNameByIdx(dto.getUser_idx());
-            dto.setWriterName(writerName != null ? writerName : "탈퇴 회원");
-        }
+        /* // 8. 작성자 이름 조회 및 DTO에 설정
+        // 💡💡 이 로직은 FreeBoardDAO.selectList에서 JOIN을 통해 이미 처리했으므로 제거합니다.
+        // for (FreeBoardDTO dto : boardList) {
+        //     String writerName = usersDao.selectNameByIdx(dto.getUser_idx());
+        //     dto.setWriterName(writerName != null ? writerName : "탈퇴 회원");
+        // }
+        */
 
         // --- [페이지 블록 계산] ---
         
@@ -91,7 +95,7 @@ public class FreeBoardListServlet extends HttpServlet {
         req.setAttribute("searchWord", searchWord); 
         
         // 게시물 목록
-        req.setAttribute("boardList", boardList); 
+        req.setAttribute("freeboardList", boardList); 
         
         // 페이징 관련 변수
         req.setAttribute("totalCount", totalCount);
@@ -104,7 +108,7 @@ public class FreeBoardListServlet extends HttpServlet {
         req.setAttribute("endPage", endPage);
         req.setAttribute("blockPage", blockPage);
         
-        // 9. View(JSP)로 포워드
-        req.getRequestDispatcher("/board/list.jsp").forward(req, resp);
+        // 9. View(JSP)로 포워드 (경로 통일 완료)
+        req.getRequestDispatcher("/freeboard/list.jsp").forward(req, resp);
     }
 }

@@ -11,41 +11,37 @@
         alert('글을 작성하려면 로그인해야 합니다.');
         location.href='${pageContext.request.contextPath}/login.jsp';
     </script>
-    <c:return/>
 </c:if>
 
-    <div class="space-medium">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="mb60 section-title">
-                        <h1>새 게시글 작성</h1>
-                        <c:if test="${not empty errorMsg}">
-                            <p style="color: red; font-weight: bold;">${errorMsg}</p>
-                        </c:if>
-                    </div>
+<%@ include file="/common/header.jsp" %>
 
-                    <form method="post" action="${pageContext.request.contextPath}/board/write.do">
-                        
-                        <input type="hidden" name="user_idx" value="${loginUser.idx}">
-                        
-                        <div class="form-group">
-                            <label for="title">제목</label>
-                            <input type="text" class="form-control" id="title" name="title" required value="${param.title}">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="content">내용</label>
-                            <textarea class="form-control" id="content" name="content" rows="10" required>${param.content}</textarea>
-                        </div>
-                        
-                        <div class="text-right">
-                            <button type="submit" class="btn btn-primary">등록하기</button>
-                            <a href="${pageContext.request.contextPath}/board/list.do" class="btn btn-default">목록으로</a>
-                        </div>
-                    </form>
-
+    <div class="container" style="padding-top: 50px;">
+    <div class="row">
+        <div class="col-md-8 col-md-offset-2">
+            <h2 class="text-center">새 게시글 작성</h2>
+            <hr>
+            
+            <form action="write.do" method="post">
+                
+                <div class="form-group">
+                    <label for="title">제목</label>
+                    <input type="text" class="form-control" id="title" name="title" 
+                           placeholder="제목을 입력하세요" required>
                 </div>
-            </div>
+                
+                <div class="form-group">
+                    <label for="content">내용</label>
+                    <textarea class="form-control" id="content" name="content" 
+                              rows="10" placeholder="내용을 입력하세요" required></textarea>
+                </div>
+                
+                <div class="form-group text-center">
+                    <button type="submit" class="btn btn-primary">등록하기</button>
+                    <button type="button" class="btn btn-default" onclick="location.href='list.do'">목록으로</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
+
+<%@ include file="/common/footer.jsp" %>

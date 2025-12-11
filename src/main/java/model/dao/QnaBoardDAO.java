@@ -57,23 +57,45 @@ public class QnaBoardDAO {
         return count;
     }
     
-    /**
-     * [2. 원본 질문 등록] 새로운 질문글을 DB에 삽입합니다.
-     */
     public boolean insertQuestion(QnaBoardDTO dto) {
-        // idx와 gnum에 같은 시퀀스 값을 넣기 위해 CURRVAL을 사용
-        String sql = "INSERT INTO qna_board (idx, user_idx, title, content, postdate, views, gnum, onum, depth) "
-                   + "VALUES (seq_qna_board_idx.NEXTVAL, ?, ?, ?, SYSDATE, 0, seq_qna_board_idx.CURRVAL, 0, 0)";
-
         Connection conn = null;
         PreparedStatement ps = null;
+        ResultSet rs = null;
+        int newIdx = 0;
+
+        // 1. 시퀀스 NEXTVAL 값 조회
+        String sqlSelectSeq = "SELECT seq_qna_board_IDX.NEXTVAL FROM dual";
+        
+        // 2. 게시글 삽입 쿼리
+        // REPLY_STATE 컬럼 추가 및 초기값 0 설정
+        String sqlInsert = "INSERT INTO qna_board (IDX, USER_IDX, TITLE, CONTENT, POSTDATE, VIEWS, GNUM, ONUM, DEPTH, REPLY_STATE) "
+                         + "VALUES (?, ?, ?, ?, SYSDATE, 0, ?, 0, 0, 0)"; 
+
         try {
             conn = DBConn.getConnection();
-            ps = conn.prepareStatement(sql);
             
-            ps.setInt(1, dto.getUser_idx());
-            ps.setString(2, dto.getTitle());
-            ps.setString(3, dto.getContent());
+            // 1단계: 시퀀스 값 조회
+            ps = conn.prepareStatement(sqlSelectSeq);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                newIdx = rs.getInt(1);
+            } else {
+                System.err.println("시퀀스 값 조회 실패");
+                return false;
+            }
+            
+            if (rs != null) rs.close();
+            if (ps != null) ps.close();
+
+            // 2단계: 게시글 삽입
+            ps = conn.prepareStatement(sqlInsert);
+            
+            int i = 1;
+            ps.setInt(i++, newIdx);
+            ps.setInt(i++, dto.getUser_idx());
+            ps.setString(i++, dto.getTitle());
+            ps.setString(i++, dto.getContent());
+            ps.setInt(i++, newIdx);
             
             return ps.executeUpdate() == 1;
 
@@ -82,14 +104,12 @@ public class QnaBoardDAO {
             e.printStackTrace();
             return false;
         } finally {
+            try { if (rs != null) rs.close(); } catch (SQLException e) {}
             try { if (ps != null) ps.close(); } catch (SQLException e) {}
             try { if (conn != null) conn.close(); } catch (SQLException e) {}
         }
     }
-
-    /**
-     * [3-1. 답글 순서 조정] 답글이 달릴 위치 이후의 모든 글의 onum을 1 증가시킵니다. (트랜잭션 필요)
-     */
+    
     private void updateOnum(Connection conn, int gnum, int onum) throws SQLException {
         String sql = "UPDATE qna_board SET onum = onum + 1 WHERE gnum = ? AND onum > ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -99,9 +119,6 @@ public class QnaBoardDAO {
         }
     }
 
-    /**
-     * [3-2. 답글 등록] 답글을 DB에 삽입합니다. (트랜잭션 필수)
-     */
     public boolean insertReply(QnaBoardDTO parentDto, QnaBoardDTO replyDto) {
         Connection conn = null;
         PreparedStatement ps = null;
@@ -109,23 +126,23 @@ public class QnaBoardDAO {
 
         try {
             conn = DBConn.getConnection();
-            conn.setAutoCommit(false); // 트랜잭션 시작
+            conn.setAutoCommit(false);
 
             // 1. 순서 번호(onum) 조정
             updateOnum(conn, parentDto.getGnum(), parentDto.getOnum());
 
-            // 2. 답글 삽입
-            String sql = "INSERT INTO qna_board (idx, user_idx, title, content, postdate, views, gnum, onum, depth) "
-                       + "VALUES (seq_qna_board_idx.NEXTVAL, ?, ?, ?, SYSDATE, 0, ?, ?, ?)";
+            // 2. 답글 삽입 (REPLY_STATE=1로 설정)
+            String sql = "INSERT INTO qna_board (IDX, USER_IDX, TITLE, CONTENT, POSTDATE, VIEWS, GNUM, ONUM, DEPTH, REPLY_STATE) "
+                       + "VALUES (seq_qna_board_IDX.NEXTVAL, ?, ?, ?, SYSDATE, 0, ?, ?, ?, 1)"; 
             ps = conn.prepareStatement(sql);
             
             ps.setInt(1, replyDto.getUser_idx());
             ps.setString(2, replyDto.getTitle());
             ps.setString(3, replyDto.getContent());
             
-            ps.setInt(4, parentDto.getGnum());          // 그룹 번호는 부모와 동일
-            ps.setInt(5, parentDto.getOnum() + 1);      // 순서 번호는 부모의 onum + 1
-            ps.setInt(6, parentDto.getDepth() + 1);     // 깊이는 부모의 depth + 1
+            ps.setInt(4, parentDto.getGnum());
+            ps.setInt(5, parentDto.getOnum() + 1);
+            ps.setInt(6, parentDto.getDepth() + 1);
 
             if (ps.executeUpdate() == 1) {
                 conn.commit();
@@ -146,7 +163,7 @@ public class QnaBoardDAO {
 
 
     /**
-     * [4. 페이징 목록 조회] (검색 조건 및 계층 구조 순서 반영)
+     * [4. 페이징 목록 조회] (작성자 이름 및 답변 상태 포함)
      */
     public List<QnaBoardDTO> selectList(String searchField, String searchWord, int start, int end) { 
         List<QnaBoardDTO> boardList = new ArrayList<>();
@@ -154,18 +171,19 @@ public class QnaBoardDAO {
         String whereClause = "";
         if (searchWord != null && !searchWord.trim().isEmpty()) {
             if ("all".equals(searchField)) {
-                whereClause += "WHERE title LIKE '%' || ? || '%' OR content LIKE '%' || ? || '%' ";
+                whereClause += "WHERE B.TITLE LIKE '%' || ? || '%' OR B.CONTENT LIKE '%' || ? || '%' ";
             } else {
-                whereClause += "WHERE " + searchField + " LIKE '%' || ? || '%' ";
+                whereClause += "WHERE B." + searchField + " LIKE '%' || ? || '%' ";
             }
         }
         
         String sql = "SELECT * FROM ("
                    + "    SELECT ROWNUM AS RNUM, T.* FROM ("
-                   + "        SELECT idx, user_idx, title, content, postdate, views, gnum, onum, depth "
-                   + "        FROM qna_board "
+                   // 💡 REPLY_STATE 추가
+                   + "        SELECT B.IDX, B.USER_IDX, B.TITLE, B.CONTENT, B.POSTDATE, B.VIEWS, B.GNUM, B.ONUM, B.DEPTH, B.REPLY_STATE, U.NAME AS WRITERNAME " 
+                   + "        FROM qna_board B JOIN users U ON B.USER_IDX = U.IDX " 
                    +         whereClause 
-                   + "        ORDER BY gnum DESC, onum ASC" // 그룹은 최신순, 그룹 내에서는 순서번호 오름차순
+                   + "        ORDER BY B.GNUM DESC, B.ONUM ASC"
                    + "    ) T"
                    + ") WHERE RNUM BETWEEN ? AND ?";
 
@@ -190,19 +208,28 @@ public class QnaBoardDAO {
                 while (rs.next()) {
                     QnaBoardDTO dto = new QnaBoardDTO();
                     
-                    dto.setIdx(rs.getInt("idx"));
-                    dto.setUser_idx(rs.getInt("user_idx"));
-                    dto.setTitle(rs.getString("title"));
-                    dto.setContent(rs.getString("content"));
-                    dto.setPostdate(rs.getDate("postdate"));
-                    dto.setViews(rs.getInt("views"));
-                    dto.setGnum(rs.getInt("gnum"));
-                    dto.setOnum(rs.getInt("onum"));
-                    dto.setDepth(rs.getInt("depth"));
+                    dto.setIdx(rs.getInt("IDX"));
+                    dto.setUser_idx(rs.getInt("USER_IDX"));
+                    dto.setTitle(rs.getString("TITLE"));
+                    dto.setContent(rs.getString("CONTENT"));
+                    dto.setPostdate(rs.getDate("POSTDATE"));
+                    dto.setViews(rs.getInt("VIEWS"));
+                    dto.setGnum(rs.getInt("GNUM"));
+                    dto.setOnum(rs.getInt("ONUM"));
+                    dto.setDepth(rs.getInt("DEPTH"));
+                    
+                    // 💡 DB에서 읽어온 REPLY_STATE 값을 그대로 설정
+                    dto.setReply_state(rs.getInt("REPLY_STATE"));
+                    
+                    // 작성자 이름 설정
+                    dto.setWriterName(rs.getString("WRITERNAME")); 
                     
                     boardList.add(dto);
                 }
             }
+            
+            System.out.println(">>> Q&A 목록 조회 완료. 조회된 게시글 수: " + boardList.size());
+            
         } 
         catch (SQLException e) {
             System.err.println("Q&A 목록 조회 중 DB 오류 발생: " + e.getMessage());
@@ -213,12 +240,12 @@ public class QnaBoardDAO {
     }
     
     /**
-     * [5. 상세 게시글 조회] 
+     * [5. 상세 게시글 조회] (작성자 이름 및 답변 상태 포함)
      */
     public QnaBoardDTO selectBoard(int idx) {
         QnaBoardDTO dto = null;
-        String sql = "SELECT idx, user_idx, title, content, postdate, views, gnum, onum, depth "
-                   + "FROM qna_board WHERE idx = ?";
+        String sql = "SELECT B.IDX, B.USER_IDX, B.TITLE, B.CONTENT, B.POSTDATE, B.VIEWS, B.GNUM, B.ONUM, B.DEPTH, B.REPLY_STATE, U.NAME AS WRITERNAME "
+                   + "FROM qna_board B JOIN users U ON B.USER_IDX = U.IDX WHERE B.IDX = ?"; 
         
         try (Connection conn = DBConn.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -228,15 +255,22 @@ public class QnaBoardDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     dto = new QnaBoardDTO();
-                    dto.setIdx(rs.getInt("idx"));
-                    dto.setUser_idx(rs.getInt("user_idx"));
-                    dto.setTitle(rs.getString("title"));
-                    dto.setContent(rs.getString("content"));
-                    dto.setPostdate(rs.getDate("postdate"));
-                    dto.setViews(rs.getInt("views"));
-                    dto.setGnum(rs.getInt("gnum"));
-                    dto.setOnum(rs.getInt("onum"));
-                    dto.setDepth(rs.getInt("depth"));
+                    
+                    dto.setIdx(rs.getInt("IDX"));
+                    dto.setUser_idx(rs.getInt("USER_IDX"));
+                    dto.setTitle(rs.getString("TITLE"));
+                    dto.setContent(rs.getString("CONTENT"));
+                    dto.setPostdate(rs.getDate("POSTDATE"));
+                    dto.setViews(rs.getInt("VIEWS"));
+                    dto.setGnum(rs.getInt("GNUM"));
+                    dto.setOnum(rs.getInt("ONUM"));
+                    dto.setDepth(rs.getInt("DEPTH"));
+                    
+                    // 작성자 이름 설정
+                    dto.setWriterName(rs.getString("WRITERNAME")); 
+                    
+                    // 💡 DB에서 읽어온 REPLY_STATE 값을 그대로 설정
+                    dto.setReply_state(rs.getInt("REPLY_STATE")); 
                 }
             }
         } 
@@ -251,7 +285,7 @@ public class QnaBoardDAO {
      * [6. 게시글 수정]
      */
     public boolean updateBoard(QnaBoardDTO dto) {
-        String sql = "UPDATE qna_board SET title = ?, content = ?, postdate = SYSDATE WHERE idx = ?";
+        String sql = "UPDATE qna_board SET TITLE = ?, CONTENT = ?, POSTDATE = SYSDATE WHERE IDX = ?";
 
         try (Connection conn = DBConn.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -272,29 +306,77 @@ public class QnaBoardDAO {
     /**
      * [7. 게시글 삭제] 
      */
+ // QnaBoardDAO.java 파일
+
+    /**
+     * [7. 게시글 삭제] 
+     * 🚨 수정: 원글을 삭제할 경우 해당 GNUM을 가진 모든 답글을 함께 삭제합니다.
+     */
     public boolean deleteBoard(int idx) {
-        String sql = "DELETE FROM qna_board WHERE idx = ?";
-
-        try (Connection conn = DBConn.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, idx);
-            
-            return ps.executeUpdate() == 1;
-
-        } catch (SQLException e) {
-            System.err.println("Q&A 게시글 삭제 중 DB 오류 발생: " + e.getMessage());
-            // 에러 코드가 FK 에러(자식 댓글이 있는 경우)라면 별도 처리 가능
-            e.printStackTrace();
+        Connection conn = null;
+        PreparedStatement ps = null;
+        boolean result = false;
+        
+        // 1. 삭제할 글의 GNUM과 DEPTH를 조회합니다. (idx를 사용해 selectBoard를 호출)
+        QnaBoardDTO targetDto = selectBoard(idx); 
+        
+        if (targetDto == null) {
+            System.err.println("삭제하려는 게시글(IDX: " + idx + ")이 존재하지 않습니다.");
             return false;
         }
+
+        // 원글(DEPTH=0)이면 그룹 전체를 삭제하고, 답글(DEPTH>0)이면 해당 글만 삭제합니다.
+        String sql = "";
+        if (targetDto.getDepth() == 0) {
+            // 💡 원글을 삭제하는 경우: 같은 GNUM을 가진 모든 글(원글 + 답글) 삭제
+            sql = "DELETE FROM qna_board WHERE GNUM = ?";
+        } else {
+            // 💡 답글을 삭제하는 경우: 해당 글만 삭제
+            sql = "DELETE FROM qna_board WHERE IDX = ?";
+        }
+        
+        try {
+            conn = DBConn.getConnection();
+            ps = conn.prepareStatement(sql);
+
+            if (targetDto.getDepth() == 0) {
+                // 원글 삭제 (GNUM 기준)
+                ps.setInt(1, targetDto.getGnum());
+            } else {
+                // 답글 삭제 (IDX 기준)
+                ps.setInt(1, idx);
+            }
+            
+            // delete 쿼리는 성공 시 삭제된 행의 개수를 반환합니다.
+            int deleteCount = ps.executeUpdate(); 
+            
+            if (deleteCount > 0) {
+                result = true;
+                System.out.println("Q&A 게시글 삭제 성공 (IDX: " + idx + ", 삭제된 행 수: " + deleteCount + ")");
+            } else {
+                System.err.println("Q&A 게시글 삭제 실패 (IDX: " + idx + ")");
+            }
+            
+            // 💡 주의: 답글을 삭제할 경우 원글의 REPLY_STATE를 확인하고 업데이트해야 하지만,
+            // 현재는 '답변완료'가 된 원글의 답글을 지워도 원글의 상태를 '답변대기'로 되돌리지 않고
+            // '답변완료'로 유지하는 것이 일반적입니다. (답변이 더 있거나 관리자가 재답변해야 함)
+            
+        } catch (SQLException e) {
+            System.err.println("Q&A 게시글 삭제 중 DB 오류 발생: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            try { if (ps != null) ps.close(); } catch (SQLException e) {}
+            try { if (conn != null) conn.close(); } catch (SQLException e) {}
+        }
+        
+        return result;
     }
     
     /**
      * [8. 조회수 증가] 
      */
     public boolean updateViews(int idx) {
-        String sql = "UPDATE qna_board SET views = views + 1 WHERE idx = ?";
+        String sql = "UPDATE qna_board SET VIEWS = VIEWS + 1 WHERE IDX = ?";
         
         try (Connection conn = DBConn.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -312,24 +394,15 @@ public class QnaBoardDAO {
     }
     
     /**
-     * [9. 답글(자식 글) 개수 조회] 해당 게시글(parent_idx)에 달린 답글의 총 개수를 조회합니다.
-     * (삭제 시 하위 글 존재 여부 확인 용도)
-     * @param parent_idx 원본 글의 idx (이는 답글의 gnum과 onum을 판단하는 기준이 됩니다)
-     * @return 자식 글의 개수 (0이면 삭제 가능)
+     * [9. 답글(자식 글) 개수 조회]
      */
     public int selectReplyCount(int parent_idx) {
         int count = 0;
-        // 답글의 gnum은 원글의 gnum과 같지만, onum은 0보다 크고 depth는 0보다 커야 합니다.
-        // 가장 확실한 방법은, 삭제하려는 게시글의 gnum을 찾아서, 그 gnum을 가진 다른 글의 개수를 세는 것입니다.
         
-        // 1. 삭제하려는 글의 gnum, onum, depth를 조회
         QnaBoardDTO parent = selectBoard(parent_idx);
-        if (parent == null) return 0; // 글이 없으면 자식도 당연히 없음
+        if (parent == null) return 0; 
 
-        // 2. 해당 그룹(gnum) 내에서, 삭제하려는 글(parent_idx)을 제외한 다른 글의 개수를 셉니다.
-        // 만약 count가 0보다 크다면, 그 글은 답글이거나, 자체가 다른 글의 답글임을 의미합니다.
-        
-        String sql = "SELECT COUNT(*) FROM qna_board WHERE gnum = ? AND idx != ?";
+        String sql = "SELECT COUNT(*) FROM qna_board WHERE GNUM = ? AND IDX != ?";
         
         try (Connection conn = DBConn.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -347,13 +420,49 @@ public class QnaBoardDAO {
             e.printStackTrace();
         }
         
-        // 주의: 이 로직은 원글(depth=0)이 삭제될 때, 그 원글 그룹(gnum)에 속한
-        // 다른 답글들이 존재하는지 확인하는 데 사용될 수 있습니다.
-        // 보다 정확하게는, 해당 글이 **원글**이고 답글이 달려있다면 삭제를 막아야 합니다.
-        
-        // 만약 해당 글이 답글(depth > 0)이라면, 그냥 삭제하면 됩니다.
-        // 복잡도를 줄이기 위해, 여기서는 '해당 글을 제외한 같은 그룹 내 글의 개수'로 판단합니다.
-        
         return count;
+    }
+    
+    /**
+     * 원글 (부모 글)의 답변 상태를 '답변완료'(1)로 업데이트합니다.
+     * @param parentIdx 원글의 IDX
+     * @return 업데이트 성공 여부
+     */
+    public boolean updateReplyState(int parentIdx) {
+        String sql = "UPDATE qna_board SET reply_state = 1 WHERE idx = ?";
+        
+        Connection conn = null; // ⭐️ try-with-resources를 사용하지 않음 (Commit 관리를 위해)
+        PreparedStatement ps = null;
+
+        try {
+            conn = DBConn.getConnection();
+            // 💡 AutoCommit이 false일 경우를 대비해 설정 (선택 사항이지만 안전함)
+            // if (conn != null) conn.setAutoCommit(false); 
+
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, parentIdx);
+            
+            int result = ps.executeUpdate();
+            System.out.println("답변 상태 업데이트 시도: IDX=" + parentIdx + ", 결과: " + (result > 0 ? "성공" : "실패"));
+
+            if (result > 0) {
+                conn.commit(); // ⭐️ [필수 추가]: 여기서 명시적으로 커밋해야 합니다.
+            } else {
+                 // 롤백은 선택적이지만, 안전하게 추가
+                 // conn.rollback(); 
+            }
+            
+            return result > 0;
+        } 
+        catch (SQLException e) {
+            System.err.println("원글 답변 상태 업데이트 중 DB 오류 발생: " + e.getMessage());
+            e.printStackTrace();
+            try { if (conn != null) conn.rollback(); } catch(SQLException rollbackE) { rollbackE.printStackTrace(); } // 롤백
+            return false;
+        } finally {
+            // ⭐️ 자원 해제
+            try { if (ps != null) ps.close(); } catch (SQLException e) {}
+            try { if (conn != null) conn.close(); } catch (SQLException e) {}
+        }
     }
 }

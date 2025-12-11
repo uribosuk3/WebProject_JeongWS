@@ -22,8 +22,8 @@ import model.dto.UsersDTO;
     maxFileSize = 1024 * 1024 * 10,
     maxRequestSize = 1024 * 1024 * 15
 )
-@WebServlet("/fileboard/modify.do")
-public class FileBoardModifyServlet extends HttpServlet {
+@WebServlet("/fileboard/edit.do")
+public class FileBoardEditServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final String UPLOAD_DIR = "uploadFiles";
 
@@ -31,7 +31,6 @@ public class FileBoardModifyServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) 
             throws ServletException, IOException {
         
-        // 1. 로그인 및 권한 체크 (이전에 구현한 QnABoardModifyServlet과 동일 로직)
         HttpSession session = req.getSession();
         UsersDTO loginUser = (UsersDTO) session.getAttribute("loginUser");
         
@@ -53,7 +52,7 @@ public class FileBoardModifyServlet extends HttpServlet {
 
         // 2. View로 데이터 전달
         req.setAttribute("board", board);
-        req.getRequestDispatcher("/fileboard/modify.jsp").forward(req, resp);
+        req.getRequestDispatcher("/fileboard/edit.jsp").forward(req, resp);
     }
 
     @Override

@@ -459,7 +459,7 @@ url(../images/cta-section-img.jpg) no-repeat center; background-size: cover; }
 
 /*-------------- tiny footer ------------*/
 .tiny-footer { padding-top: 19px; padding-bottom: 9px; font-size: 12px; background-color: #0e0c0b; color: #858585; text-transform: uppercase; }
-.copyright-content { padding-top: 7px; padding-bottom: 5px color:#747474; }
+.copyright-content { padding-top: 7px; padding-bottom: 5px color #747474; }
 
 /*-----------------------------------
 9. Pages 
@@ -837,3 +837,6 @@ opacity: .5; }
     .childern { padding-left: 0px; list-style: none; }
     .error-title { font-size: 42px; margin-bottom: 10px; font-weight: 800; }
     .testimonial-content { font-weight: 400; padding-left: 0px; }
+}
+
+

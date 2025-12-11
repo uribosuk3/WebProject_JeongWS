@@ -5,6 +5,7 @@ import java.io.IOException;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -41,9 +42,38 @@ public class FileBoardViewServlet extends HttpServlet {
         FileBoardDAO fileDao = FileBoardDAO.getInstance();
         UsersDAO userDao = UsersDAO.getInstance(); 
 
-        // 3. 조회수 증가 (먼저 실행)
-        // 🚨 주의: FileBoardDAO에 updateViews(int idx) 메서드가 구현되어 있어야 합니다.
-        fileDao.updateViews(idx); 
+     // ⭐️⭐️ 3. 조회수 증가 로직 (쿠키 확인 기반으로 수정) ⭐️⭐️
+        
+     // 3-1. 쿠키 이름 설정: 게시글 번호별로 고유하게 설정
+     String cookieName = "view_board_" + idx;
+             
+     // 3-2. 요청에서 기존 쿠키를 찾습니다.
+     Cookie[] cookies = req.getCookies();
+     boolean cookieFound = false;
+     if (cookies != null) {
+         for (Cookie c : cookies) {
+             if (c.getName().equals(cookieName)) {
+                 cookieFound = true;
+                 break;
+             }
+         }
+     }
+
+     // 3-3. 쿠키가 없을 때만 조회수 증가 및 쿠키 생성
+     if (!cookieFound) {
+         // 🚨 주의: FileBoardDAO에 updateViews(int idx) 메서드가 구현되어 있어야 합니다.
+         fileDao.updateViews(idx); 
+
+         // 새로운 쿠키 생성 (유효 시간: 1일 = 60초 * 60분 * 24시간)
+         Cookie newCookie = new Cookie(cookieName, "viewed");
+         newCookie.setMaxAge(60 * 60 * 24); 
+         
+         // 쿠키 유효 경로: 현재 애플리케이션의 fileboard 경로에서만 유효
+         newCookie.setPath(req.getContextPath() + "/fileboard"); 
+         
+         resp.addCookie(newCookie);
+     }
+     // ⭐️⭐️ 조회수 증가 로직 수정 완료 ⭐️⭐️ 
 
         // 4. 게시글 정보 조회 (파일 정보 포함)
         FileBoardDTO board = fileDao.selectBoard(idx);

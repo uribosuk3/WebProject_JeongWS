@@ -1,4 +1,4 @@
-package Servlet.qnaboard;
+package servlet.qnaboard;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,7 +13,7 @@ import model.dao.QnaBoardDAO; // Q&A DAO 사용
 import model.dao.UsersDAO;
 import model.dto.QnaBoardDTO; // Q&A DTO 사용
 
-@WebServlet("/qna/list.do")
+@WebServlet("/qnaboard/list.do")
 public class QnaBoardListServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -85,7 +85,7 @@ public class QnaBoardListServlet extends HttpServlet {
         req.setAttribute("searchField", searchField);
         req.setAttribute("searchWord", searchWord); 
         
-        req.setAttribute("boardList", boardList); 
+        req.setAttribute("qnaboardList", boardList); 
         
         // 페이징 관련 변수
         req.setAttribute("totalCount", totalCount);
@@ -99,6 +99,6 @@ public class QnaBoardListServlet extends HttpServlet {
         req.setAttribute("blockPage", blockPage);
         
         // 8. View(JSP)로 포워드
-        req.getRequestDispatcher("/qna/list.jsp").forward(req, resp);
+        req.getRequestDispatcher("/qnaboard/list.jsp").forward(req, resp);
     }
 }

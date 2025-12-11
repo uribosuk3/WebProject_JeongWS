@@ -3,7 +3,8 @@ package model.dto;
 public class UsersDTO {
     
     // 필드 (DB 테이블의 컬럼과 일치)
-    private String id;
+	private int idx;
+	private String id;
     private String pw;
     private String name;
     private String email;
@@ -15,6 +16,14 @@ public class UsersDTO {
     }
 
     // Getter와 Setter
+    public int getIdx() {
+		return idx;
+	}
+
+	public void setIdx(int idx) {
+		this.idx = idx;
+	}
+    
     public String getId() {
         return id;
     }

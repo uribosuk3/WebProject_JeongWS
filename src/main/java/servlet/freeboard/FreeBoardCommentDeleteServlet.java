@@ -13,12 +13,12 @@ import model.dao.FreeBoardCommentDAO;
 import model.dto.FreeBoardCommentDTO;
 import model.dto.UsersDTO;
 
-@WebServlet("/comment/delete.do")
+@WebServlet("/freeboard/commentdelete.do")
 public class FreeBoardCommentDeleteServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) 
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)    
             throws ServletException, IOException {
         
         HttpSession session = req.getSession(false);
@@ -41,7 +41,8 @@ public class FreeBoardCommentDeleteServlet extends HttpServlet {
             comment_idx = Integer.parseInt(commentIdxStr);
             board_idx = Integer.parseInt(boardIdxStr);
         } catch (NumberFormatException e) {
-            resp.sendRedirect(req.getContextPath() + "/board/list.do");
+            // 💡 경로 통일: /board/list.do -> /freeboard/list.do
+            resp.sendRedirect(req.getContextPath() + "/freeboard/list.do");
             return;
         }
 
@@ -60,7 +61,8 @@ public class FreeBoardCommentDeleteServlet extends HttpServlet {
         // 5. 결과 처리
         if (isSuccess) {
             // 성공 시, 상세 보기 페이지로 리다이렉트
-            resp.sendRedirect(req.getContextPath() + "/board/view.do?idx=" + board_idx + "&pageNum=" + pageNum);
+            // 💡 경로 통일: /board/view.do -> /freeboard/view.do
+            resp.sendRedirect(req.getContextPath() + "/freeboard/view.do?idx=" + board_idx + "&pageNum=" + pageNum);
         } else {
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "댓글 삭제에 실패했습니다.");
         }

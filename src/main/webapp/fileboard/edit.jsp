@@ -3,10 +3,9 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
-<c:set var="board" value="${requestScope.board}" />
+<c:set var="fileboard" value="${requestScope.board}" />
 <c:if test="${empty board}">
     <c:redirect url="${pageContext.request.contextPath}/fileboard/list.do"/>
-    <c:return/>
 </c:if>
 
 <!DOCTYPE html>
@@ -29,7 +28,7 @@
                         <h1>자료 수정</h1>
                     </div>
                     
-                    <form method="post" action="${pageContext.request.contextPath}/fileboard/modify.do" enctype="multipart/form-data">
+                    <form method="post" action="${pageContext.request.contextPath}/fileboard/edit.do" enctype="multipart/form-data">
                         
                         <input type="hidden" name="idx" value="${board.idx}">
                         <input type="hidden" name="old_stored_filename" value="${board.stored_filename}">

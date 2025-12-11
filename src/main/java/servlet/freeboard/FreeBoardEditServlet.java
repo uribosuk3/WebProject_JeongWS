@@ -13,13 +13,13 @@ import model.dao.FreeBoardDAO;
 import model.dto.FreeBoardDTO;
 import model.dto.UsersDTO;
 
-@WebServlet("/board/edit.do")
+@WebServlet("/freeboard/edit.do")
 public class FreeBoardEditServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     // 1. GET 요청: 수정 폼을 보여줍니다. (기존 내용을 채워서)
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) 
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)    
             throws ServletException, IOException {
         
         HttpSession session = req.getSession(false);
@@ -37,7 +37,8 @@ public class FreeBoardEditServlet extends HttpServlet {
         try {
             idx = Integer.parseInt(idxStr);
         } catch (NumberFormatException e) {
-            resp.sendRedirect(req.getContextPath() + "/board/list.do");
+            // 💡 경로 통일: /board/list.do -> /freeboard/list.do
+            resp.sendRedirect(req.getContextPath() + "/freeboard/list.do");
             return;
         }
 
@@ -55,12 +56,13 @@ public class FreeBoardEditServlet extends HttpServlet {
         req.setAttribute("board", board);
         
         // View로 포워드
-        req.getRequestDispatcher("/board/edit.jsp").forward(req, resp);
+        // 💡 경로 통일: /board/edit.jsp -> /freeboard/edit.jsp
+        req.getRequestDispatcher("/freeboard/edit.jsp").forward(req, resp);
     }
 
     // 2. POST 요청: 수정된 내용을 DB에 반영합니다.
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) 
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)    
             throws ServletException, IOException {
         
         req.setCharacterEncoding("UTF-8");
@@ -84,7 +86,8 @@ public class FreeBoardEditServlet extends HttpServlet {
         try {
             idx = Integer.parseInt(idxStr);
         } catch (NumberFormatException e) {
-            resp.sendRedirect(req.getContextPath() + "/board/list.do");
+            // 💡 경로 통일: /board/list.do -> /freeboard/list.do
+            resp.sendRedirect(req.getContextPath() + "/freeboard/list.do");
             return;
         }
         
@@ -108,13 +111,15 @@ public class FreeBoardEditServlet extends HttpServlet {
 
         if (isSuccess) {
             // 성공 시, 상세 보기 페이지로 리다이렉트 (pageNum 유지)
-            resp.sendRedirect(req.getContextPath() + "/board/view.do?idx=" + idx + "&pageNum=" + pageNum);
+            // 💡 경로 통일: /board/view.do -> /freeboard/view.do
+            resp.sendRedirect(req.getContextPath() + "/freeboard/view.do?idx=" + idx + "&pageNum=" + pageNum);
         } else {
             // 실패 시, 에러 메시지를 담아 폼으로 포워드
             req.setAttribute("errorMsg", "게시글 수정에 실패했습니다. DB 오류를 확인하세요.");
             // 실패하더라도 수정 폼을 보여주기 위해 기존 DTO와 pageNum을 다시 설정
             req.setAttribute("board", oldBoard); 
-            req.getRequestDispatcher("/board/edit.jsp").forward(req, resp);
+            // 💡 경로 통일 (JSP 포워드 경로는 이미 통일되어 있었음)
+            req.getRequestDispatcher("/freeboard/edit.jsp").forward(req, resp);
         }
     }
 }

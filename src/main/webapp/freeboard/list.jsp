@@ -3,22 +3,12 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>자유 게시판</title>
-    <link href="../css/bootstrap.min.css" rel="stylesheet">
-    <link href="../css/style.css" rel="stylesheet">
-</head>
+<%-- 1. 공통 헤더 포함 (Navigation Bar, <html>, <head>, <body> 시작 태그 포함 가정) --%>
+<%@ include file="../common/header.jsp" %> 
 
-<body>
-    
-    <div class="header navbar-fixed-top" style="background-color: #aaaaaa;">
-        </div>
-    
+<%-- 💡 JSTL을 사용하여 로그인 상태를 JavaScript에서 사용할 변수로 준비합니다. --%>
+<c:set var="isLoggedIn" value="${not empty sessionScope.loginUser}" />
+
     <div class="space-medium">
         <div class="container">
             <div class="row">
@@ -46,17 +36,17 @@
                         </thead>
                         <tbody>
                             <c:choose>
-                                <c:when test="${empty boardList}">
+                                <c:when test="${empty freeboardList}">
                                     <tr>
                                         <td colspan="5" class="text-center">등록된 게시글이 없거나 검색 결과가 없습니다.</td>
                                     </tr>
                                 </c:when>
                                 <c:otherwise>
-                                    <c:forEach var="board" items="${boardList}">
+                                    <c:forEach var="board" items="${freeboardList}">
                                         <tr>
                                             <td>${board.idx}</td>
                                             <td>
-                                                <a href="${pageContext.request.contextPath}/board/view.do?idx=${board.idx}&pageNum=${pageNum}">
+                                                <a href="${pageContext.request.contextPath}/freeboard/view.do?idx=${board.idx}&pageNum=${pageNum}">
                                                     ${board.title}
                                                 </a>
                                             </td>
@@ -72,12 +62,13 @@
 
                     <div class="row">
                         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-                            <c:if test="${not empty sessionScope.loginUser}">
-                                <a href="${pageContext.request.contextPath}/board/write.jsp" class="btn btn-primary">글쓰기</a>
-                            </c:if>
+                            <%-- 🚨 기존 조건문 (c:if) 제거: 버튼은 항상 보이도록 수정 --%>
+                            <a href="#" id="freeboardWriteBtn" class="btn btn-primary">
+                                <span class="glyphicon glyphicon-pencil"></span> 글쓰기
+                            </a>
                         </div>
                         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 text-right">
-                            <form method="get" action="${pageContext.request.contextPath}/board/list.do" class="form-inline d-inline-block">
+                            <form method="get" action="${pageContext.request.contextPath}/freeboard/list.do" class="form-inline d-inline-block">
                                 <select name="searchField" class="form-control" style="width: auto;">
                                     <option value="title" ${searchField == 'title' ? 'selected' : ''}>제목</option>
                                     <option value="content" ${searchField == 'content' ? 'selected' : ''}>내용</option>
@@ -97,17 +88,17 @@
                     <div class="text-center mt-5">
                         <ul class="pagination">
                             <c:if test="${startPage > blockPage}">
-                                <li><a href="${pageContext.request.contextPath}/board/list.do?pageNum=${startPage - 1}${searchParam}">이전</a></li>
+                                <li><a href="${pageContext.request.contextPath}/freeboard/list.do?pageNum=${startPage - 1}${searchParam}">이전</a></li>
                             </c:if>
                             
                             <c:forEach var="i" begin="${startPage}" end="${endPage}">
                                 <li class="${pageNum == i ? 'active' : ''}">
-                                    <a href="${pageContext.request.contextPath}/board/list.do?pageNum=${i}${searchParam}">${i}</a>
+                                    <a href="${pageContext.request.contextPath}/freeboard/list.do?pageNum=${i}${searchParam}">${i}</a>
                                 </li>
                             </c:forEach>
                             
                             <c:if test="${endPage < totalPage}">
-                                <li><a href="${pageContext.request.contextPath}/board/list.do?pageNum=${endPage + 1}${searchParam}">다음</a></li>
+                                <li><a href="${pageContext.request.contextPath}/freeboard/list.do?pageNum=${endPage + 1}${searchParam}">다음</a></li>
                             </c:if>
                         </ul>
                     </div>
@@ -117,13 +108,23 @@
         </div>
     </div>
     
-    <div class="footer">
-        </div>
-    <div class="tiny-footer">
-        </div>
-    
-    <script src="../js/jquery.min.js"></script>
-    <script src="../js/bootstrap.min.js"></script>
-</body>
+<script>
+    document.getElementById('freeboardWriteBtn').addEventListener('click', function(e) {
+        
+        // JSTL 변수 (isLoggedIn)를 JavaScript에서 사용합니다.
+        var isLoggedIn = ${isLoggedIn}; 
+        
+        if (isLoggedIn) {
+            // 로그인 상태: 실제 작성 페이지로 이동
+            location.href = '${pageContext.request.contextPath}/freeboard/write.do'; 
+        } else {
+            // 로그아웃 상태: 알림창 띄우고 로그인 페이지로 이동
+            e.preventDefault(); // 기본 링크 이동 방지
+            alert('글을 작성하려면 로그인해야 합니다.');
+            location.href = '${pageContext.request.contextPath}/member/login.jsp'; // 💡 로그인 페이지 경로
+        }
+    });
+</script>
 
-</html>
+<%-- 2. 공통 푸터 포함 (하단 스크립트, </body>, </html> 닫는 태그 포함 가정) --%>
+<%@ include file="../common/footer.jsp" %>

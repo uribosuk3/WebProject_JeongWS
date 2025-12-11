@@ -10,9 +10,8 @@
 <c:if test="${empty board}">
     <script>
         alert('존재하지 않는 게시글입니다.');
-        location.href='${pageContext.request.contextPath}/qna/list.do';
+        location.href='${pageContext.request.contextPath}/qnaboard/list.do';
     </script>
-    <c:return/>
 </c:if>
 
 <style>
@@ -58,17 +57,17 @@
                 <div class="text-right mt-4">
                     <%-- 💡 1. 로그인 사용자이고, 게시글의 작성자라면 수정/삭제 버튼 노출 --%>
                     <c:if test="${not empty sessionScope.loginUser && sessionScope.loginUser.idx == board.user_idx}">
-                        <a href="${pageContext.request.contextPath}/qna/modify.do?idx=${board.idx}&pageNum=${pageNum}" class="btn btn-warning">수정</a>
-                        <a href="${pageContext.request.contextPath}/qna/delete.do?idx=${board.idx}&pageNum=${pageNum}" class="btn btn-danger" onclick="return confirm('정말로 삭제하시겠습니까?');">삭제</a>
+                        <a href="${pageContext.request.contextPath}/qnaboard/edit.do?idx=${board.idx}&pageNum=${pageNum}" class="btn btn-warning">수정</a>
+                        <a href="${pageContext.request.contextPath}/qnaboard/delete.do?idx=${board.idx}&pageNum=${pageNum}" class="btn btn-danger" onclick="return confirm('정말로 삭제하시겠습니까?');">삭제</a>
                     </c:if>
 
                     <%-- 💡 2. 원글에만 '답변하기' 버튼 노출 (parent_idx가 0인 경우) --%>
-                    <c:if test="${board.parent_idx == 0 && not empty sessionScope.loginUser}">
-                        <a href="${pageContext.request.contextPath}/qna/reply.do?idx=${board.idx}" class="btn btn-primary">답변하기</a>
+                    <c:if test="${board.depth == 0 && not empty sessionScope.loginUser}">
+                        <a href="${pageContext.request.contextPath}/qnaboard/reply.do?idx=${board.idx}" class="btn btn-primary">답변하기</a>
                     </c:if>
                     
                     <%-- 💡 3. 목록 링크 --%>
-                    <a href="${pageContext.request.contextPath}/qna/list.do?pageNum=${empty pageNum ? '1' : pageNum}" class="btn btn-default">목록으로</a>
+                    <a href="${pageContext.request.contextPath}/qnaboard/list.do?pageNum=${empty pageNum ? '1' : pageNum}" class="btn btn-default">목록으로</a>
                 </div>
                 
                 <hr>
@@ -92,9 +91,9 @@
                                                 <fmt:formatDate value="${reply.postdate}" pattern="yyyy.MM.dd HH:mm"/>
                                                 
                                                 <c:if test="${not empty sessionScope.loginUser && sessionScope.loginUser.idx == reply.user_idx}">
-                                                    <a href="${pageContext.request.contextPath}/qna/modify.do?idx=${reply.idx}&pageNum=${pageNum}" 
+                                                    <a href="${pageContext.request.contextPath}/qnaboard/edit.do?idx=${reply.idx}&pageNum=${pageNum}" 
                                                         class="btn btn-sm btn-warning ml-2" style="font-size: 0.75rem;">수정</a>
-                                                    <a href="${pageContext.request.contextPath}/qna/delete.do?idx=${reply.idx}&pageNum=${pageNum}" 
+                                                    <a href="${pageContext.request.contextPath}/qnaboard/delete.do?idx=${reply.idx}&pageNum=${pageNum}" 
                                                         class="btn btn-sm btn-danger ml-2" style="font-size: 0.75rem;" 
                                                         onclick="return confirm('답변을 삭제하시겠습니까?');">삭제</a>
                                                 </c:if>

@@ -8,9 +8,8 @@
 <c:if test="${empty board}">
     <script>
         alert('잘못된 접근입니다.');
-        location.href='${pageContext.request.contextPath}/qna/list.do';
+        location.href='${pageContext.request.contextPath}/qnaboard/list.do';
     </script>
-    <c:return/>
 </c:if>
 
 <div class="space-medium">
@@ -21,7 +20,7 @@
                     <h1>Q&A 게시글 수정</h1>
                 </div>
                 
-                <form method="post" action="${pageContext.request.contextPath}/qna/modify.do">
+                <form method="post" action="${pageContext.request.contextPath}/qnaboard/edit.do">
                     
                     <input type="hidden" name="idx" value="${board.idx}">
                     
@@ -37,7 +36,7 @@
                     
                     <div class="text-right">
                         <button type="submit" class="btn btn-warning">수정 완료</button>
-                        <a href="${pageContext.request.contextPath}/qna/view.do?idx=${board.idx}" class="btn btn-default">취소</a>
+                        <a href="${pageContext.request.contextPath}/qnaboard/view.do?idx=${board.idx}" class="btn btn-default">취소</a>
                     </div>
                 </form>
 

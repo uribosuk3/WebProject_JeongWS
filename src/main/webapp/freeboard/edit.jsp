@@ -8,9 +8,8 @@
 <c:if test="${empty board}">
     <script>
         alert('잘못된 접근입니다.');
-        location.href='${pageContext.request.contextPath}/board/list.do';
+        location.href='${pageContext.request.contextPath}/freeboard/list.do';
     </script>
-    <c:return/>
 </c:if>
 
 <div class="space-medium">
@@ -21,7 +20,7 @@
                     <h1>게시글 수정</h1>
                 </div>
                 
-                <form method="post" action="${pageContext.request.contextPath}/board/modify.do">
+                <form method="post" action="${pageContext.request.contextPath}/freeboard/edit.do">
                     
                     <input type="hidden" name="idx" value="${board.idx}">
                     
@@ -37,7 +36,7 @@
                     
                     <div class="text-right">
                         <button type="submit" class="btn btn-warning">수정 완료</button>
-                        <a href="${pageContext.request.contextPath}/board/view.do?idx=${board.idx}" class="btn btn-default">취소</a>
+                        <a href="${pageContext.request.contextPath}/freeboard/view.do?idx=${board.idx}" class="btn btn-default">취소</a>
                     </div>
                 </form>
 

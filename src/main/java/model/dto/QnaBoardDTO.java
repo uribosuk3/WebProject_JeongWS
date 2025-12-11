@@ -11,8 +11,9 @@ public class QnaBoardDTO {
     private String content;
     private Date postdate;
     private int views;
+    private int reply_state;
     
-    // 💡 Q&A 계층 구조 필드
+	// 💡 Q&A 계층 구조 필드
     private int gnum;
     private int onum;
     private int depth;
@@ -50,4 +51,7 @@ public class QnaBoardDTO {
 
     public String getWriterName() { return writerName; }
     public void setWriterName(String writerName) { this.writerName = writerName; }
+    
+    public int getReply_state() { return reply_state; }
+  	public void setReply_state(int reply_state) { this.reply_state = reply_state; }
 }

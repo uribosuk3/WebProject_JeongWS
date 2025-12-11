@@ -1,4 +1,4 @@
-package Servlet.qnaboard; // 💡 변경된 패키지 구조
+package servlet.qnaboard;
 
 import java.io.IOException;
 
@@ -13,7 +13,7 @@ import model.dao.QnaBoardDAO;
 import model.dto.QnaBoardDTO;
 import model.dto.UsersDTO;
 
-@WebServlet("/qna/delete.do")
+@WebServlet("/qnaboard/delete.do")
 public class QnaBoardDeleteServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private QnaBoardDAO dao = QnaBoardDAO.getInstance();
@@ -28,7 +28,7 @@ public class QnaBoardDeleteServlet extends HttpServlet {
         String idxStr = req.getParameter("idx");
         
         if (loginUser == null || idxStr == null || idxStr.trim().isEmpty()) {
-            resp.sendRedirect(req.getContextPath() + "/qna/list.do");
+            resp.sendRedirect(req.getContextPath() + "/qnaboard/list.do");
             return;
         }
         
@@ -50,7 +50,7 @@ public class QnaBoardDeleteServlet extends HttpServlet {
 
         // 5. 결과 처리
         if (dbResult) {
-            resp.sendRedirect(req.getContextPath() + "/qna/list.do");
+            resp.sendRedirect(req.getContextPath() + "/qnaboard/list.do");
         } else {
             // DB 삭제 실패
             resp.setContentType("text/html; charset=UTF-8");

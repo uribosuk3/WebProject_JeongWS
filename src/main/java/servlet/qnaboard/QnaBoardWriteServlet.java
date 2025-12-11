@@ -1,4 +1,4 @@
-package Servlet.qnaboard;
+package servlet.qnaboard;
 
 import java.io.IOException;
 
@@ -13,7 +13,7 @@ import model.dao.QnaBoardDAO;
 import model.dto.QnaBoardDTO;
 import model.dto.UsersDTO;
 
-@WebServlet("/qna/write.do")
+@WebServlet("/qnaboard/write.do")
 public class QnaBoardWriteServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -27,7 +27,7 @@ public class QnaBoardWriteServlet extends HttpServlet {
 
         if (loginUser == null) {
             // 로그인되어 있지 않으면 로그인 페이지로 리다이렉트
-            resp.sendRedirect(req.getContextPath() + "/login.jsp");
+            resp.sendRedirect(req.getContextPath() + "/member/login.jsp");
             return;
         }
 
@@ -50,7 +50,7 @@ public class QnaBoardWriteServlet extends HttpServlet {
         // 5. 결과 처리 및 리다이렉트
         if (result) {
             // 성공: 목록 페이지로 이동
-            resp.sendRedirect(req.getContextPath() + "/qna/list.do");
+            resp.sendRedirect(req.getContextPath() + "/qnaboard/list.do");
         } else {
             // 실패: 에러 메시지 출력 후 등록 페이지 유지 (또는 에러 페이지로)
             resp.setContentType("text/html; charset=UTF-8");
@@ -60,23 +60,32 @@ public class QnaBoardWriteServlet extends HttpServlet {
     
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) 
-    				throws ServletException, IOException {
-    	HttpSession session = req.getSession();
+            throws ServletException, IOException {
+        
+        // 1. 로그인 여부 확인
+        HttpSession session = req.getSession();
         UsersDTO loginUser = (UsersDTO) session.getAttribute("loginUser");
 
-        // 1. 로그인 체크: 로그인되어 있지 않으면 로그인 페이지로 리다이렉트
         if (loginUser == null) {
-            resp.sendRedirect(req.getContextPath() + "/login.jsp");
-            return;
+            
+            // 🚨 로그인되지 않은 경우: 경고창 출력 후 로그인 페이지로 리다이렉트
+            
+            // a. 응답 타입 설정 (HTML, UTF-8)
+            resp.setContentType("text/html; charset=UTF-8");
+            
+            // b. JavaScript 출력
+            String loginPagePath = req.getContextPath() + "/member/login.jsp"; // 💡 로그인 페이지 경로
+            
+            resp.getWriter().println("<script>");
+            resp.getWriter().println("    alert('로그인 후 작성 가능합니다.');");
+            resp.getWriter().println("    location.href='" + loginPagePath + "';");
+            resp.getWriter().println("</script>");
+            
+            return; // 서블릿 실행 종료
         }
 
-        // 2. 페이지 타이틀 설정 (header.jsp에서 사용)
-        req.setAttribute("pageTitle", "Q&A 게시글 등록");
-
-        // 3. 💡 JSP 파일의 새로운 경로로 포워딩
-        req.getRequestDispatcher("/WEB-INF/views/qna/write.jsp").forward(req, resp);
+        // 2. 로그인된 경우: 글쓰기 폼 페이지로 포워드
+        req.setAttribute("pageTitle", "자료실 글쓰기");
+        req.getRequestDispatcher("/qnaboard/write.jsp").forward(req, resp);
     }
-    
-    // POST는 이전 단계에서 구현한 DML(DB 삽입) 로직이 그대로 사용됩니다.
-    // DML 로직에서도 포워딩(리다이렉트) 경로가 정확해야 합니다.
 }
