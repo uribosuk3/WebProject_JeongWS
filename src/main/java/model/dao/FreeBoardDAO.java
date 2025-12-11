@@ -43,7 +43,7 @@ public class FreeBoardDAO {
         // 💡 SQL 수정: users 테이블과 JOIN하여 작성자 이름(U.name)을 가져오도록 수정
         String sql = "SELECT * FROM ("
                     + "    SELECT ROWNUM AS RNUM, T.* FROM ("
-                    + "        SELECT B.idx, B.user_idx, B.title, B.content, B.postdate, B.views, B.likes, U.name AS writerName " // 작성자 이름 추가
+                    + "        SELECT B.idx, B.user_idx, B.title, B.content, B.postdate, B.views, B.recommend_count AS likes, U.name AS writerName " // 작성자 이름 추가
                     + "        FROM free_board B JOIN users U ON B.user_idx = U.idx " // JOIN 구문 추가
                     + whereClause 
                     + "        ORDER BY B.idx DESC"
@@ -189,7 +189,7 @@ public class FreeBoardDAO {
     public FreeBoardDTO selectBoard(int idx) {
         FreeBoardDTO dto = null;
         // 💡 SQL 수정: users 테이블과 JOIN하여 U.name(writerName)을 가져오도록 수정
-        String sql = "SELECT B.idx, B.user_idx, B.title, B.content, B.postdate, B.views, B.likes, U.name AS writerName "
+        String sql = "SELECT B.idx, B.user_idx, B.title, B.content, B.postdate, B.views, B.recommend_count AS likes, U.name AS writerName "
                     + "FROM free_board B LEFT JOIN users U ON B.user_idx = U.idx "
                     + "WHERE B.idx = ?";
         

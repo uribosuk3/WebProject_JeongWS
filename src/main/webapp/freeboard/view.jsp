@@ -23,6 +23,33 @@
         .list-group-item { display: block; }
         .d-flex { display: flex; align-items: center; }
         .ml-2 { margin-left: 0.5rem; }
+        
+        /* Q&A 게시판의 테두리 스타일 */
+    .board-detail-area {
+        border: 1px solid #e0e0e0 !important; /* 실선 테두리 강제 적용 */
+        padding: 20px !important;
+        border-radius: 5px !important;
+        margin-bottom: 30px !important;
+        background-color: #ffffff !important;
+    }
+    /* 게시글 정보 (작성자, 날짜, 조회수) 구분선 명확화 */
+    	.board-info {
+            color: #333 !important; /* 폰트 색상 강제 */
+            font-size: 0.9em !important;
+            margin-bottom: 20px !important;
+            border-bottom: 1px dashed #ddd !important; /* 점선 하단 테두리 강제 적용 */
+            padding-bottom: 10px !important;
+            /* Q&A 스타일이 .board-info를 덮어쓰도록 강제 */
+        }
+	  	.board-info strong {
+	       color: #000 !important;
+        }
+    	.board-content { 
+            padding: 0 0 !important; /* 상하 패딩 완전히 제거하여 내용이 우측 상단에 붙도록 강제 */
+            border-bottom: none !important; /* 하단 테두리 제거 강제 */
+            min-height: 200px;
+            white-space: pre-wrap;
+        }
     </style>
     
     <div class="space-medium">
@@ -37,7 +64,7 @@
                     <div class="freeboard-view">
                         <div class="freeboard-view-header">
                             <h2>${board.title}</h2> 
-                            <div class="freeboard-info">
+                            <div class="board-info">
                                 <span>작성자: **${board.writerName}**</span>
                                 <span>작성일: <fmt:formatDate value="${board.postdate}" pattern="yyyy.MM.dd HH:mm"/></span>
                                 <span>조회수: ${board.views}</span>
@@ -45,8 +72,8 @@
                             </div>
                         </div>
 
-                        <div class="freeboard-content">
-                            ${board.content}
+                        <div class="board-content">
+                            <p style="white-space: pre-wrap;">${board.content}</p> 
                         </div>
                     </div>
                     

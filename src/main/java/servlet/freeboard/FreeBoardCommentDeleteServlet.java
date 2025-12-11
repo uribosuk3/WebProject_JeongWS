@@ -13,7 +13,7 @@ import model.dao.FreeBoardCommentDAO;
 import model.dto.FreeBoardCommentDTO;
 import model.dto.UsersDTO;
 
-@WebServlet("/freeboard/commentdelete.do")
+@WebServlet("/freeboard/commentDelete.do")
 public class FreeBoardCommentDeleteServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -26,13 +26,13 @@ public class FreeBoardCommentDeleteServlet extends HttpServlet {
         
         // 1. 로그인 인증
         if (loginUser == null) {
-            resp.sendRedirect(req.getContextPath() + "/login.jsp");
+            resp.sendRedirect(req.getContextPath() + "/member/login.jsp");
             return;
         }
 
         // 2. 파라미터 추출
         String commentIdxStr = req.getParameter("comment_idx"); // 삭제할 댓글 번호
-        String boardIdxStr = req.getParameter("board_idx"); // 리다이렉트할 게시글 번호
+        String boardIdxStr = req.getParameter("freeboard_idx"); // 리다이렉트할 게시글 번호
         String pageNum = req.getParameter("pageNum"); // 목록 복귀용
 
         int comment_idx = 0;

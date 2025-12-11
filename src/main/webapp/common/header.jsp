@@ -14,7 +14,6 @@
         table th {
             white-space: nowrap;
             word-break: keep-all;
-        }
     </style>
     
     <title>${empty pageTitle ? '커뮤니티 웹 서비스' : pageTitle}</title> 
@@ -59,8 +58,13 @@
             <% 
             } else { 
                 // 3. 로그인 성공 상태: "loginUser" 객체가 세션에 있으면
+                String userName = ((UsersDTO) loginUserObj).getName();
             %>
-                 <li><strong><%= ((UsersDTO) loginUserObj).getName() %>님</strong></li>
+                 <li>
+                    <span class="navbar-text">
+                        <strong><%= userName %>님</strong>
+                    </span>
+                 </li>
                  <li><a href="<%= request.getContextPath() %>/member/mypage.jsp">회원정보수정</a></li>
                  <li><a href="<%= request.getContextPath() %>/member/logout.do">로그아웃</a></li> 
             <% 

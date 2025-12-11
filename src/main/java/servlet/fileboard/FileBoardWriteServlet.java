@@ -19,9 +19,8 @@ import model.dto.UsersDTO;
 
 // 💡 파일 업로드 처리를 위한 필수 어노테이션
 @MultipartConfig(
-    fileSizeThreshold = 1024 * 1024, // 1MB
-    maxFileSize = 1024 * 1024 * 10,  // 10MB
-    maxRequestSize = 1024 * 1024 * 15 // 15MB
+    maxFileSize = 1024 * 1024 * 20,  // 20MB
+    maxRequestSize = 1024 * 1024 * 20 // 20MB
 )
 @WebServlet("/fileboard/write.do")
 public class FileBoardWriteServlet extends HttpServlet {
