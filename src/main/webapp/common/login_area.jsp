@@ -22,24 +22,24 @@
 </div>
 
 <style>
-/* 💡 login_area 전용 스타일 */
+/* login_area 전용 스타일 */
 .login-box-container {
     background-color: #ffffff;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     
-    /* 🚨 최종 해결: 컨테이너를 벗어나는 내용을 숨겨서 삐져나옴 방지 */
+    /* 컨테이너를 벗어나는 내용을 숨겨서 삐져나옴 방지 */
     overflow-x: hidden; 
     
     /* 최대 너비 설정 유지 */
     max-width: 350px; 
 }
 
-/* 🚨 1. 외부 패딩 최소화 클래스 (공간 확보) */
+/* 1. 외부 패딩 최소화 클래스 (공간 확보) */
 .pinside-reset {
     padding: 15px !important; 
 }
 
-/* 🚨 2. 제목 (h5) : 한 줄 유지 + 말줄임표 처리 */
+/* 2. 제목 (h5) : 한 줄 유지 + 말줄임표 처리 */
 .no-wrap-title {
     white-space: nowrap;
     overflow: hidden;
@@ -47,7 +47,7 @@
     display: block; 
 }
 
-/* 🚨 3. 링크 그룹 (div) : 한 줄 유지 (어떤 너비에서도 줄바꿈 방지) */
+/* 3. 링크 그룹 (div) : 한 줄 유지 (어떤 너비에서도 줄바꿈 방지) */
 .no-wrap-links {
     white-space: nowrap; /* 줄바꿈을 강제로 막음 */
     /* overflow: hidden; 은 상위 컨테이너에 적용되어 삐져나옴이 방지됨 */

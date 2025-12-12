@@ -1,6 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
-<%-- 🚨 DTO import: 스크립트릿에서 사용자 이름(getName())을 쓰려면 필요합니다. --%>
 <%@ page import="model.dto.UsersDTO" %> 
 
 <!DOCTYPE html>
@@ -24,7 +23,7 @@
 <body>
     
     <%-- ========================================================= --%>
-    <%-- 🌐 네비게이션 (메뉴) 영역 시작 --%>
+    <%-- 네비게이션 (메뉴) 영역 시작 --%>
     <%-- ========================================================= --%>
     <nav class="navbar navbar-default">
       <div class="container">
@@ -51,12 +50,13 @@
             Object loginUserObj = session.getAttribute("loginUser");
             
             if (loginUserObj == null) { 
-                // 2. 로그아웃 상태: "loginUser" 객체가 세션에 없으면
+            // 2. 로그아웃 상태: "loginUser" 객체가 세션에 없으면
             %>
                  <li><a href="<%= request.getContextPath() %>/member/login.jsp">로그인</a></li>
                  <li><a href="<%= request.getContextPath() %>/member/register.jsp">회원가입</a></li>
             <% 
-            } else { 
+            } 
+            else { 
                 // 3. 로그인 성공 상태: "loginUser" 객체가 세션에 있으면
                 String userName = ((UsersDTO) loginUserObj).getName();
             %>
@@ -74,5 +74,5 @@
           </ul>
     </nav>
     <%-- ========================================================= --%>
-    <%-- 🌐 네비게이션 영역 끝 --%>
+    <%-- 네비게이션 영역 끝 --%>
     <%-- ========================================================= --%>

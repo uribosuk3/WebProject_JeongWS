@@ -12,10 +12,11 @@ public class FreeBoardCommentDTO {
     
     // 확장 필드 (작성자 이름 표시용)
     private String writerName; 
-
+    private int depth;
+    
     // Getter와 Setter (필수)
     
-    public int getIdx() { return idx; }
+	public int getIdx() { return idx; }
     public void setIdx(int idx) { this.idx = idx; }
 
     public int getBoard_idx() { return board_idx; }
@@ -33,3 +34,4 @@ public class FreeBoardCommentDTO {
     public String getWriterName() { return writerName; }
     public void setWriterName(String writerName) { this.writerName = writerName; }
 }
+	

@@ -39,7 +39,8 @@ public class MypageServlet extends HttpServlet {
             req.setAttribute("userDetails", userDetails);
             // 💡 mypage.jsp의 실제 위치로 포워드 (예: /member/mypage.jsp)
             req.getRequestDispatcher("/member/mypage.jsp").forward(req, resp);
-        } else {
+        } 
+        else {
             // 사용자 정보를 찾지 못할 경우 처리
             session.invalidate(); // 세션 무효화
             resp.sendRedirect(req.getContextPath() + "/member/login.jsp");

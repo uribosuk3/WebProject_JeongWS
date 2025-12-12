@@ -244,22 +244,61 @@ public class FreeBoardDAO {
     }
 
     /**
-     * [7. 게시글 삭제] 특정 게시글을 DB에서 제거합니다. (수정 불필요)
+     * [7. 게시글 삭제] 특정 게시글을 DB에서 제거합니다.
+     * 💡 ORA-02292 오류 방지를 위해, 해당 게시글에 달린 댓글(free_comment)을 먼저 삭제합니다.
      */
     public boolean deleteBoard(int idx) {
-        String sql = "DELETE FROM free_board WHERE idx = ?";
+        Connection conn = null;
+        PreparedStatement psComment = null;
+        PreparedStatement psBoard = null;
+        boolean result = false;
 
-        try (Connection conn = DBConn.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        // 1. 댓글 삭제 쿼리: 해당 게시글 IDX(board_idx)를 가진 모든 댓글 삭제
+        String sqlDeleteComment = "DELETE FROM free_comment WHERE board_idx = ?";
+        // 2. 게시글 삭제 쿼리
+        String sqlDeleteBoard = "DELETE FROM free_board WHERE idx = ?"; 
 
-            ps.setInt(1, idx);
+        try {
+            conn = DBConn.getConnection();
+            conn.setAutoCommit(false); // 트랜잭션 시작
+
+            // 1단계: 댓글 삭제 (자식 레코드)
+            psComment = conn.prepareStatement(sqlDeleteComment);
+            psComment.setInt(1, idx);
+            psComment.executeUpdate();
             
-            return ps.executeUpdate() == 1;
+            // ❌ 이 위치의 psComment.close()를 제거했습니다. ❌
+            // if (psComment != null) psComment.close(); 
+            // ------------------------------------------
+
+            // 2단계: 게시글 삭제 (부모 레코드)
+            psBoard = conn.prepareStatement(sqlDeleteBoard);
+            psBoard.setInt(1, idx);
+            
+            if (psBoard.executeUpdate() == 1) {
+                conn.commit(); // 게시글 삭제까지 성공 시 커밋
+                result = true;
+            } else {
+                conn.rollback(); // 실패 시 롤백
+            }
 
         } catch (SQLException e) {
-            System.err.println("게시글 삭제 중 DB 오류 발생: " + e.getMessage());
+            System.err.println("자유 게시글 삭제 중 DB 오류 발생: " + e.getMessage());
             e.printStackTrace();
-            return false;
+            // DB 오류 발생 시에도 롤백
+            try { if (conn != null) conn.rollback(); } catch(SQLException rollbackE) { rollbackE.printStackTrace(); }
+        } finally {
+            // 자원 해제 및 AutoCommit 복원
+            try { if (psComment != null) psComment.close(); } catch (SQLException e) {} // 💡 psComment 자원 해제를 finally로 이동
+            try { if (psBoard != null) psBoard.close(); } catch (SQLException e) {}
+            try { 
+                if (conn != null) {
+                    conn.setAutoCommit(true); // AutoCommit 상태 복원
+                    conn.close(); 
+                }
+            } catch (SQLException e) {}
         }
+        
+        return result;
     }
 }

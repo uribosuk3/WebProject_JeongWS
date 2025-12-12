@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 public class DBConn {
 
-    // 💡 JDBC 연결 정보를 환경에 맞게 수정하세요.
+    // JDBC 연결 정보를 환경에 맞게 수정하세요.
     // 프로젝트명: webproject_db, 비밀번호: 1234
     private static final String DRIVER = "oracle.jdbc.OracleDriver";
     private static final String URL = "jdbc:oracle:thin:@localhost:1521:xe"; // XE 환경 기준
